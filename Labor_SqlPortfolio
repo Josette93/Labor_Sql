@@ -1,0 +1,51 @@
+ /* For Glassdoor survey takers who are not Glassdoor subscribers, we would like to model an 8% cost of living raise applied to their basepay and see what their new total compensation would be with this 8% raise along with their most recent bonus pay out but only if they have at least a college degree and have scored at least a 3 on their performance evaluation. Be sure to sort by the new pay with the increase and bonus included from largest to smallest. Please add two decimal places to the pay data.*/
+
+select glassdoor_survey_roles.empsurvid,
+
+sub_list.survey_id,
+
+glassdoor_survey_roles.basepay,
+
+glassdoor_survey_roles.bonus,
+
+cast(glassdoor_survey_roles.basepay*1.08 as decimal(18,2)) as Basepay_Raise,
+
+cast((glassdoor_survey_roles.basepay*1.08)+glassdoor_survey_roles.bonus as decimal(18,2)) as Basepay_Raise_w_Bonus,
+
+glassdoor_survey_roles.education,
+
+glassdoor_survey_roles.perfeval
+
+from glassdoor_survey_roles left join sub_list on glassdoor_survey_roles.empsurvid=sub_list.Survey_ID
+
+where sub_list.survey_id is null and glassdoor_survey_roles.education != 'High School' and glassdoor_survey_roles.perfeval >= 3
+
+order by Basepay_Raise_w_Bonus desc
+
+
+/* Return the average compensation (BasePay + Bonus), max compensation (BasePay + Bonus), min compensation (BasePay + Bonus), and the number of surveyors for surveyors in the tech industry.
+
+· Tech industry is considered the following:
+
+Roles: Data Scientist, Software Engineer, IT*/
+
+SELECT CAST(AVG(GLASSDOOR_SURVEY_ROLES.BASEPAY+GLASSDOOR_SURVEY_ROLES.BONUS) AS DECIMAL (18,2)) AS AVG_COMP,
+MAX(GLASSDOOR_SURVEY_ROLES.BASEPAY+GLASSDOOR_SURVEY_ROLES.BONUS) AS MAX_COMP,
+COUNT(SURV_NAME.EMPSURVID) AS EMPLOY_COUNT
+FROM GLASSDOOR_SURVEY_ROLES LEFT JOIN SURV_NAME ON SURV_NAME.EMPSURVID=GLASSDOOR_SURVEY_ROLES.EMPSURVID
+WHERE GLASSDOOR_SURVEY_ROLES.JOBTITLE IN ('Data Scientist','Software Engineer','IT')
+
+/* Return the number of surveyors for surveyors who participated in the survey who are located in non at will states. At will states do not have public policy exemption, do not have covenant of good faith, and do not have implied contract exception.
+ATWILL
+SURV NAME */
+
+SELECT count(empsurvid) as surv_count
+FROM SURV_NAME  JOIN AT_WILL ON AT_WILL.SHORT_STATE=SURV_NAME.STATE
+WHERE AT_WILL.COVENANT_OF_GOOD_FAITH = 'Yes' and at_will.implied_contract_exception ='Yes' and at_will.public_policy_exemption = 'Yes'
+
+/* Provide us with a list of all companies who are hiring that are located in the following states: California, Texas, Georgia, Tennessee, North Carolina, South Carolina, New York that pay at least $50,000 and are in an industry that services finance. Sort by the company from A to Z, then by the pay from largest to smallest.
+whats needed */
+
+SELECT TITLE,COMPANY,START_RANGE,LOCATION,INDUSTRIES
+FROM LINKEDIN_DATA_ANALYST
+where (location like '%tx%' or location like '%ca%' or location like '%ga%' or location like '%tn%' or location like '%nc%' or location like '%sc%' or location like '%ny%') and industries like '%financ%' and start_range >= 50000
